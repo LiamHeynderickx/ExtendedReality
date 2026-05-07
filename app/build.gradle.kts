@@ -9,6 +9,9 @@ android {
             minorApiLevel = 1
         }
     }
+    aaptOptions {
+        noCompress("tflite")
+    }
 
     defaultConfig {
         applicationId = "com.example.extendedreality"
@@ -53,6 +56,8 @@ dependencies {
 
     // Google ML Kit (For Image Labeling and Text Recognition)
     implementation("com.google.mlkit:image-labeling:17.0.8")
+    implementation("com.google.mlkit:image-labeling-custom:17.0.3")
+    implementation("com.google.mlkit:linkfirebase:17.0.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
 
 }
