@@ -31,9 +31,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Find the PreviewView from your XML Layer Cake
+        // Find views
         viewFinder = findViewById(R.id.viewFinder);
         cameraExecutor = Executors.newSingleThreadExecutor();
+
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         // 1. Ask the user for Camera Permission
         ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(

@@ -29,6 +29,11 @@ android {
             )
         }
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -53,5 +58,9 @@ dependencies {
 
     // Google ML Kit (For Image Labeling)
     implementation("com.google.mlkit:image-labeling:17.0.8")
+
+    // SceneView (For 3D Model Rendering)
+    implementation("io.github.sceneview:sceneview:0.10.0")
+    implementation("dev.romainguy:kotlin-math:1.5.3")
 
 }
