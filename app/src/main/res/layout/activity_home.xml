@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#99C6DE">
+    android:background="@drawable/space_background_gradient">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnInfoTop"
@@ -35,51 +35,68 @@
             android:fontFamily="sans-serif-black"
             android:text="FutureFoods"
             android:textAlignment="center"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="48sp" />
+            android:textColor="@android:color/white"
+            android:textSize="48sp"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="4"
+            android:shadowRadius="8" />
 
         <TextView
             android:id="@+id/subtitleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:alpha="0.7"
+            android:alpha="0.85"
             android:fontFamily="sans-serif-light"
-            android:text="See the effects of climate change on our foods"
+            android:letterSpacing="0.2"
+            android:text="SEE THE EFFECTS OF CLIMATE CHANGE ON OUR FOODS"
             android:textAlignment="center"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textColor="#E0F2F1"
+            android:textSize="12sp"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4" />
     </LinearLayout>
 
-    <!-- Circular Rotating Button Container -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/btnStartCamera"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        app:cardBackgroundColor="@android:color/transparent"
-        app:cardCornerRadius="150dp"
-        app:cardElevation="8dp"
+    <!-- Container for Orbiting Icons -->
+    <FrameLayout
+        android:id="@+id/orbitContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/titleContainer"
-        app:strokeWidth="0dp">
+        app:layout_constraintTop_toBottomOf="@+id/titleContainer">
 
-        <ImageView
-            android:id="@+id/rotatingEarth"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="Rotating Earth"
-            android:scaleType="centerCrop"
-            android:src="@drawable/background2" />
+        <!-- Orbiting Icons will be added here programmatically -->
 
-        <View
-            android:id="@+id/clickOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true" />
-    </com.google.android.material.card.MaterialCardView>
+        <!-- Circular Rotating Button Container (Earth) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnStartCamera"
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:layout_gravity="center"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardCornerRadius="130dp"
+            app:cardElevation="12dp"
+            app:strokeWidth="0dp">
+
+            <ImageView
+                android:id="@+id/rotatingEarth"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Rotating Earth"
+                android:scaleType="centerCrop"
+                android:src="@drawable/background2" />
+
+            <View
+                android:id="@+id/clickOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+        </com.google.android.material.card.MaterialCardView>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Main Loaf Body (Base) -->
+    <path
+        android:fillColor="#8B4513"
+        android:pathData="M3,16c0,2 2,3 5,3h8c3,0 5,-1 5,-3v-2c0,-3 -2,-5 -5,-6c-1,-0.5 -2.5,-1 -4,-1s-3,0.5 -4,1c-3,1 -5,3 -5,6z" />
+    <!-- Top Crust Highlight -->
+    <path
+        android:fillColor="#CD853F"
+        android:pathData="M5,15c0,1 1,1.5 3,1.5h8c2,0 3,-0.5 3,-1.5v-1c0,-2 -2,-4 -5,-4.5c-0.5,-0.1 -1.5,-0.2 -2,-0.2s-1.5,0.1 -2,0.2c-3,0.5 -5,2.5 -5,4.5z" />
+    <!-- Score Marks (Detailed Cuts) -->
+    <path
+        android:fillColor="#5D2E0A"
+        android:pathData="M8,10l1,2M11.5,10l1,2M15,10l1,2" />
+    <!-- Subtle Flour/Texture Grains -->
+    <path
+        android:fillColor="#F5F5DC"
+        android:fillAlpha="0.3"
+        android:pathData="M7,14h1v1h-1zM10,13h1v1h-1zM14,14h1v1h-1z" />
+</vector>

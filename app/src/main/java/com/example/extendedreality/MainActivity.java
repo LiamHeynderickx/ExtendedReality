@@ -1,6 +1,7 @@
 package com.example.extendedreality;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.Image;
 import android.os.Bundle;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView climateText;
     private TextView popUpText;
     private TextView timerText;
+    private View resultCard;
     private ExecutorService cameraExecutor;
     private TextRecognizer recognizer;
     private ImageLabeler customLabeler;
@@ -71,12 +73,14 @@ public class MainActivity extends AppCompatActivity {
         climateText = findViewById(R.id.climateText);
         popUpText = findViewById(R.id.popUpText);
         timerText = findViewById(R.id.timerText);
+        resultCard = findViewById(R.id.resultCard);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
         // Navigation Buttons
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnInfo).setOnClickListener(v -> {
-            // Handle Info Click
+            Intent intent = new Intent(MainActivity.this, AboutActivity.class);
+            startActivity(intent);
         });
 
         // Initialize ML Kit Text Recognizer
@@ -219,12 +223,24 @@ public class MainActivity extends AppCompatActivity {
                             if (finalDetectedCategory != null) {
 
                                 // Only reset the timer if it's a NEW category, or if the text was currently hidden
-                                if (!finalDetectedCategory.equals(currentCategoryOnScreen) || popUpText.getVisibility() == View.GONE) {
+                                if (!finalDetectedCategory.equals(currentCategoryOnScreen) || resultCard.getVisibility() != View.VISIBLE) {
 
                                     currentCategoryOnScreen = finalDetectedCategory;
                                     popUpText.setText(finalDetectedCategory);
-                                    popUpText.setVisibility(View.VISIBLE);
-                                    timerText.setVisibility(View.VISIBLE);
+                                    
+                                    // Animate the result card appearing
+                                    if (resultCard.getVisibility() != View.VISIBLE) {
+                                        resultCard.setVisibility(View.VISIBLE);
+                                        resultCard.setAlpha(0f);
+                                        resultCard.setScaleX(0.8f);
+                                        resultCard.setScaleY(0.8f);
+                                        resultCard.animate()
+                                                .alpha(1f)
+                                                .scaleX(1f)
+                                                .scaleY(1f)
+                                                .setDuration(300)
+                                                .start();
+                                    }
 
                                     // Cancel any existing timer before starting a new one
                                     if (popUpTimer != null) {
@@ -239,10 +255,17 @@ public class MainActivity extends AppCompatActivity {
                                         }
 
                                         public void onFinish() {
-                                            // Time's up! Hide both texts
-                                            popUpText.setVisibility(View.GONE);
-                                            timerText.setVisibility(View.GONE);
-                                            currentCategoryOnScreen = null;
+                                            // Time's up! Animate hide
+                                            resultCard.animate()
+                                                    .alpha(0f)
+                                                    .scaleX(0.8f)
+                                                    .scaleY(0.8f)
+                                                    .setDuration(300)
+                                                    .withEndAction(() -> {
+                                                        resultCard.setVisibility(View.INVISIBLE);
+                                                        currentCategoryOnScreen = null;
+                                                    })
+                                                    .start();
                                         }
                                     }.start();
                                 }
