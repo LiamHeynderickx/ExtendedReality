@@ -35,11 +35,14 @@ public class HomeActivity extends AppCompatActivity {
             });
         }
 
-        MaterialButton btnSettings = findViewById(R.id.btnSettings);
-        if (btnSettings != null) {
-            btnSettings.setOnClickListener(v -> {
-                // Placeholder for information/settings
+        View btnInfo = findViewById(R.id.btnInfoTop);
+        if (btnInfo != null) {
+            btnInfo.setOnClickListener(v -> {
+                // Handle Info Click
             });
         }
+
+
+
     }
 }
