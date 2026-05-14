@@ -26,12 +26,14 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.common.model.LocalModel;
+
+// NEW OBJECT DETECTION IMPORTS
+import com.google.mlkit.vision.objects.DetectedObject;
+import com.google.mlkit.vision.objects.ObjectDetection;
+import com.google.mlkit.vision.objects.ObjectDetector;
+import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
+
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.label.ImageLabel;
-import com.google.mlkit.vision.label.ImageLabeler;
-import com.google.mlkit.vision.label.ImageLabeling;
-import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions;
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
@@ -50,18 +52,18 @@ public class MainActivity extends AppCompatActivity {
     private PreviewView viewFinder;
     private TextView climateText;
     private TextView popUpText;
-    private TextView timerText;
+
     private ExecutorService cameraExecutor;
-    private TextRecognizer recognizer;
-    private ImageLabeler customLabeler;
-    private ImageLabeler generalLabeler;
 
-    // Timer variables for the 10-second pop-up
-    private final Handler uiHandler = new Handler(Looper.getMainLooper());
-    private Runnable clearTextRunnable;
+    // The two ML pipelines
+    private TextRecognizer textRecognizer;
+    private ObjectDetector objectDetector; // Upgraded from ImageLabeler!
 
-    private String currentCategoryOnScreen = null; // Keeps track of what we are looking at
-    private android.os.CountDownTimer popUpTimer;  // The new ticking timer
+    // The Flicker-Free Tracking Buffer
+    private final Handler trackingHandler = new Handler(Looper.getMainLooper());
+    private Runnable hideTextRunnable;
+    private String currentCategoryOnScreen = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,36 +72,33 @@ public class MainActivity extends AppCompatActivity {
         viewFinder = findViewById(R.id.viewFinder);
         climateText = findViewById(R.id.climateText);
         popUpText = findViewById(R.id.popUpText);
-        timerText = findViewById(R.id.timerText);
+
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-        // Initialize ML Kit Text Recognizer
-        recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        // 1. Initialize ML Kit Text Recognizer
+        textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
 
-        // Initialize Custom Image Labeler
+        // 2. Initialize Custom Object Detector (Make sure you point to your new Roboflow model!)
         LocalModel localModel = new LocalModel.Builder()
-                .setAssetFilePath("model_with_metadata.tflite")
+                .setAssetFilePath("my_object_detector.tflite") // <-- UPDATE THIS to your new file name
                 .build();
 
-        CustomImageLabelerOptions customImageLabelerOptions =
-                new CustomImageLabelerOptions.Builder(localModel)
-                        .setConfidenceThreshold(0.01f)
-                        .setMaxResultCount(5)
+        // STREAM_MODE is the secret to smooth AR tracking!
+        CustomObjectDetectorOptions customObjectDetectorOptions =
+                new CustomObjectDetectorOptions.Builder(localModel)
+                        .setDetectorMode(CustomObjectDetectorOptions.STREAM_MODE)
+                        .enableClassification() // Returns the text labels
+                        .setClassificationConfidenceThreshold(0.5f)
+                        .setMaxPerObjectLabelCount(1)
                         .build();
 
-        customLabeler = ImageLabeling.getClient(customImageLabelerOptions);
-
-        // Initialize General ML Kit Image Labeler
-        generalLabeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS);
+        objectDetector = ObjectDetection.getClient(customObjectDetectorOptions);
 
         ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
-                    if (isGranted) {
-                        startCamera();
-                    } else {
-                        Toast.makeText(this, "Camera permission is required.", Toast.LENGTH_LONG).show();
-                    }
+                    if (isGranted) startCamera();
+                    else Toast.makeText(this, "Camera permission is required.", Toast.LENGTH_LONG).show();
                 }
         );
 
@@ -116,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(viewFinder.getSurfaceProvider());
 
@@ -127,11 +125,8 @@ public class MainActivity extends AppCompatActivity {
                 imageAnalyzer.setAnalyzer(cameraExecutor, this::processImageProxy);
 
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
-
                 cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(
-                        this, cameraSelector, preview, imageAnalyzer
-                );
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer);
 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "Use case binding failed", e);
@@ -139,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-    // Helper method to group words into a main category
     private String getCategory(String word) {
         word = word.toLowerCase();
         if (Arrays.asList("apple", "gala", "fuji", "smith", "jonagold", "elstar", "appel", "pomme").contains(word)) return "APPLE";
@@ -151,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
         if (Arrays.asList("honey", "honing", "miel").contains(word)) return "HONEY";
         if (Arrays.asList("bread", "brood", "pain").contains(word)) return "BREAD";
 
-        // Return null if the word doesn't match our targets
         return null;
     }
 
@@ -161,85 +154,105 @@ public class MainActivity extends AppCompatActivity {
         if (mediaImage != null) {
             InputImage image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
 
-            Task<Text> textTask = recognizer.process(image);
-            Task<List<ImageLabel>> customLabelTask = customLabeler.process(image);
-            Task<List<ImageLabel>> generalLabelTask = generalLabeler.process(image);
+            Task<Text> textTask = textRecognizer.process(image);
+            Task<List<DetectedObject>> objectTask = objectDetector.process(image);
 
-            Tasks.whenAllComplete(textTask, customLabelTask, generalLabelTask)
+            Tasks.whenAllComplete(textTask, objectTask)
                     .addOnCompleteListener(task -> {
                         String detectedCategory = null;
+                        int targetX = -1;
+                        int targetY = -1;
 
-                        // 1. Check Text Recognition
+                        // 1. Check Text Recognition WITH BOUNDING BOXES
                         if (textTask.isSuccessful()) {
-                            String fullText = textTask.getResult().getText().toLowerCase();
-                            // Split text into words to check against our categories
-                            String[] words = fullText.split("\\s+");
-                            for (String w : words) {
-                                String cat = getCategory(w);
-                                if (cat != null) {
-                                    detectedCategory = cat;
-                                    break; // Stop looking once we find a match
+                            Text textResult = textTask.getResult();
+                            boolean foundMatch = false;
+
+                            for (Text.TextBlock block : textResult.getTextBlocks()) {
+                                for (Text.Line line : block.getLines()) {
+                                    for (Text.Element element : line.getElements()) {
+                                        String cat = getCategory(element.getText());
+                                        if (cat != null) {
+                                            detectedCategory = cat;
+                                            foundMatch = true;
+
+                                            android.graphics.Rect wordBox = element.getBoundingBox();
+                                            if (wordBox != null) {
+                                                targetX = wordBox.centerX();
+                                                targetY = wordBox.centerY();
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (foundMatch) break;
                                 }
+                                if (foundMatch) break;
                             }
                         }
 
-                        // 2. Check Custom Apple Model (Only if text didn't find anything)
-                        if (detectedCategory == null && customLabelTask.isSuccessful()) {
-                            for (ImageLabel label : customLabelTask.getResult()) {
-                                if (label.getText().toLowerCase().contains("apple") && label.getConfidence() > 0.70f) {
-                                    detectedCategory = "APPLE";
-                                    break;
-                                }
-                            }
-                        }
+                        // 2. Check Custom Object Detection WITH BOUNDING BOXES (If text didn't find anything)
+                        if (detectedCategory == null && objectTask.isSuccessful()) {
+                            for (DetectedObject obj : objectTask.getResult()) {
+                                for (DetectedObject.Label label : obj.getLabels()) {
 
-                        // 3. Check General Model (Only if text and custom model found nothing)
-                        if (detectedCategory == null && generalLabelTask.isSuccessful()) {
-                            for (ImageLabel label : generalLabelTask.getResult()) {
-                                // Add a threshold here too so random noise doesn't trigger it
-                                if (label.getConfidence() > 0.65f) {
+                                    // Check if the object label matches one of our categories
                                     String cat = getCategory(label.getText());
-                                    if (cat != null) {
+
+                                    // Fallback: If it's an apple but the label is just "0 Apple" or "Apple"
+                                    if (cat == null && label.getText().toLowerCase().contains("apple")) {
+                                        cat = "APPLE";
+                                    }
+
+                                    if (cat != null && label.getConfidence() > 0.60f) {
                                         detectedCategory = cat;
+
+                                        // Get the exact center coordinate of the physical object
+                                        android.graphics.Rect objBox = obj.getBoundingBox();
+                                        targetX = objBox.centerX();
+                                        targetY = objBox.centerY();
+
+                                        Log.d(TAG, "AR TRACKING ID: " + obj.getTrackingId()); // Awesome for AR debugging!
                                         break;
                                     }
                                 }
+                                if (detectedCategory != null) break;
                             }
                         }
 
-                        // 4. Update the UI with the ticking 10-second timer
+                        // 3. Update the UI and TRACK THE TARGET!
                         final String finalDetectedCategory = detectedCategory;
+                        final int finalX = targetX;
+                        final int finalY = targetY;
+
                         runOnUiThread(() -> {
                             if (finalDetectedCategory != null) {
 
-                                // Only reset the timer if it's a NEW category, or if the text was currently hidden
-                                if (!finalDetectedCategory.equals(currentCategoryOnScreen) || popUpText.getVisibility() == View.GONE) {
+                                // --- A. CONTINUOUS TRACKING ---
+                                if (finalX != -1 && finalY != -1) {
+                                    float scaleX = (float) viewFinder.getWidth() / imageProxy.getHeight();
+                                    float scaleY = (float) viewFinder.getHeight() / imageProxy.getWidth();
 
-                                    currentCategoryOnScreen = finalDetectedCategory;
-                                    popUpText.setText(finalDetectedCategory);
-                                    popUpText.setVisibility(View.VISIBLE);
-                                    timerText.setVisibility(View.VISIBLE);
+                                    float screenX = finalX * scaleX;
+                                    float screenY = finalY * scaleY;
 
-                                    // Cancel any existing timer before starting a new one
-                                    if (popUpTimer != null) {
-                                        popUpTimer.cancel();
-                                    }
-
-                                    // Start a 10-second (10000ms) timer that ticks every 1 second (1000ms)
-                                    popUpTimer = new android.os.CountDownTimer(5000, 1000) {
-                                        public void onTick(long millisUntilFinished) {
-                                            // Update the text with the seconds remaining
-                                            timerText.setText((millisUntilFinished / 1000) + "s");
-                                        }
-
-                                        public void onFinish() {
-                                            // Time's up! Hide both texts
-                                            popUpText.setVisibility(View.GONE);
-                                            timerText.setVisibility(View.GONE);
-                                            currentCategoryOnScreen = null;
-                                        }
-                                    }.start();
+                                    popUpText.post(() -> {
+                                        popUpText.setText(finalDetectedCategory);
+                                        popUpText.setVisibility(View.VISIBLE);
+                                        popUpText.setX(screenX - (popUpText.getWidth() / 2f));
+                                        popUpText.setY(screenY - (popUpText.getHeight() / 2f));
+                                    });
                                 }
+
+                                // --- B. THE FLICKER BUFFER ---
+                                if (hideTextRunnable != null) {
+                                    trackingHandler.removeCallbacks(hideTextRunnable);
+                                }
+
+                                hideTextRunnable = () -> {
+                                    popUpText.setVisibility(View.GONE);
+                                    currentCategoryOnScreen = null;
+                                };
+                                trackingHandler.postDelayed(hideTextRunnable, 1000);
                             }
                         });
 
@@ -256,7 +269,8 @@ public class MainActivity extends AppCompatActivity {
         if (cameraExecutor != null) {
             cameraExecutor.shutdown();
         }
-        // Clean up the timer to prevent memory leaks if the user closes the app
-        if (popUpTimer != null) popUpTimer.cancel();
+        if (hideTextRunnable != null) {
+            trackingHandler.removeCallbacks(hideTextRunnable);
+        }
     }
 }

@@ -4,11 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.extendedreality"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
     aaptOptions {
         noCompress("tflite")
     }
@@ -16,7 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.example.extendedreality"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -56,7 +52,7 @@ dependencies {
 
     // Google ML Kit (For Image Labeling and Text Recognition)
     implementation("com.google.mlkit:image-labeling:17.0.8")
-    implementation("com.google.mlkit:image-labeling-custom:17.0.3")
+    implementation("com.google.mlkit:object-detection-custom:17.0.2")
     implementation("com.google.mlkit:linkfirebase:17.0.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
 
