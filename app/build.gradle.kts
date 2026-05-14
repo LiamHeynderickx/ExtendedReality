@@ -49,7 +49,7 @@ dependencies {
     implementation("androidx.camera:camera-camera2:${camerax_version}")
     implementation("androidx.camera:camera-lifecycle:${camerax_version}")
     implementation("androidx.camera:camera-view:${camerax_version}")
-
+    implementation("com.google.mediapipe:tasks-vision:0.10.14")
     // Google ML Kit (For Image Labeling and Text Recognition)
     implementation("com.google.mlkit:image-labeling:17.0.8")
     implementation("com.google.mlkit:object-detection-custom:17.0.2")
