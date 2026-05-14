@@ -49,21 +49,19 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private PreviewView viewFinder;
-    private TextView climateText;
     private TextView popUpText;
     private TextView timerText;
     private View resultCard;
+    private View instructionPopup;
+    private View infoSlidingPanel;
     private ExecutorService cameraExecutor;
     private TextRecognizer recognizer;
     private ImageLabeler customLabeler;
     private ImageLabeler generalLabeler;
 
-    // Timer variables for the 10-second pop-up
-    private final Handler uiHandler = new Handler(Looper.getMainLooper());
-    private Runnable clearTextRunnable;
+    private String currentCategoryOnScreen = null; 
+    private android.os.CountDownTimer popUpTimer;  
 
-    private String currentCategoryOnScreen = null; // Keeps track of what we are looking at
-    private android.os.CountDownTimer popUpTimer;  // The new ticking timer
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,17 +80,31 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         viewFinder = findViewById(R.id.viewFinder);
-        climateText = findViewById(R.id.climateText);
         popUpText = findViewById(R.id.popUpText);
         timerText = findViewById(R.id.timerText);
         resultCard = findViewById(R.id.resultCard);
+        instructionPopup = findViewById(R.id.instructionPopup);
+        infoSlidingPanel = findViewById(R.id.infoSlidingPanel);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
         // Navigation Buttons
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-        findViewById(R.id.btnInfo).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, AboutActivity.class);
-            startActivity(intent);
+        
+        findViewById(R.id.btnCloseInfoPanel).setOnClickListener(v -> {
+            infoSlidingPanel.animate()
+                    .translationY(infoSlidingPanel.getHeight() + 400)
+                    .setDuration(500)
+                    .start();
+        });
+        
+        findViewById(R.id.btnCloseInstruction).setOnClickListener(v -> {
+            instructionPopup.animate()
+                    .alpha(0f)
+                    .scaleX(0.8f)
+                    .scaleY(0.8f)
+                    .setDuration(300)
+                    .withEndAction(() -> instructionPopup.setVisibility(View.GONE))
+                    .start();
         });
 
         // Initialize ML Kit Text Recognizer
@@ -161,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-    // Helper method to group words into a main category
     private String getCategory(String word) {
         word = word.toLowerCase();
         if (Arrays.asList("apple", "gala", "fuji", "smith", "jonagold", "elstar", "appel", "pomme").contains(word)) return "APPLE";
@@ -172,8 +183,6 @@ public class MainActivity extends AppCompatActivity {
         if (Arrays.asList("chocolate", "cacao", "cocoa", "chocolade", "chocolat").contains(word)) return "CHOCOLATE";
         if (Arrays.asList("honey", "honing", "miel").contains(word)) return "HONEY";
         if (Arrays.asList("bread", "brood", "pain").contains(word)) return "BREAD";
-
-        // Return null if the word doesn't match our targets
         return null;
     }
 
@@ -191,21 +200,18 @@ public class MainActivity extends AppCompatActivity {
                     .addOnCompleteListener(task -> {
                         String detectedCategory = null;
 
-                        // 1. Check Text Recognition
                         if (textTask.isSuccessful()) {
                             String fullText = textTask.getResult().getText().toLowerCase();
-                            // Split text into words to check against our categories
                             String[] words = fullText.split("\\s+");
                             for (String w : words) {
                                 String cat = getCategory(w);
                                 if (cat != null) {
                                     detectedCategory = cat;
-                                    break; // Stop looking once we find a match
+                                    break;
                                 }
                             }
                         }
 
-                        // 2. Check Custom Apple Model (Only if text didn't find anything)
                         if (detectedCategory == null && customLabelTask.isSuccessful()) {
                             for (ImageLabel label : customLabelTask.getResult()) {
                                 if (label.getText().toLowerCase().contains("apple") && label.getConfidence() > 0.70f) {
@@ -215,10 +221,8 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
 
-                        // 3. Check General Model (Only if text and custom model found nothing)
                         if (detectedCategory == null && generalLabelTask.isSuccessful()) {
                             for (ImageLabel label : generalLabelTask.getResult()) {
-                                // Add a threshold here too so random noise doesn't trigger it
                                 if (label.getConfidence() > 0.65f) {
                                     String cat = getCategory(label.getText());
                                     if (cat != null) {
@@ -229,18 +233,13 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
 
-                        // 4. Update the UI with the ticking 10-second timer
                         final String finalDetectedCategory = detectedCategory;
                         runOnUiThread(() -> {
                             if (finalDetectedCategory != null) {
-
-                                // Only reset the timer if it's a NEW category, or if the text was currently hidden
                                 if (!finalDetectedCategory.equals(currentCategoryOnScreen) || resultCard.getVisibility() != View.VISIBLE) {
-
                                     currentCategoryOnScreen = finalDetectedCategory;
                                     popUpText.setText(finalDetectedCategory);
                                     
-                                    // Animate the result card appearing
                                     if (resultCard.getVisibility() != View.VISIBLE) {
                                         resultCard.setVisibility(View.VISIBLE);
                                         resultCard.setAlpha(0f);
@@ -252,22 +251,24 @@ public class MainActivity extends AppCompatActivity {
                                                 .scaleY(1f)
                                                 .setDuration(300)
                                                 .start();
+                                        
+                                        // Slide up the info panel
+                                        infoSlidingPanel.animate()
+                                                .translationY(0)
+                                                .setDuration(500)
+                                                .start();
                                     }
 
-                                    // Cancel any existing timer before starting a new one
                                     if (popUpTimer != null) {
                                         popUpTimer.cancel();
                                     }
 
-                                    // Start a 10-second (10000ms) timer that ticks every 1 second (1000ms)
                                     popUpTimer = new android.os.CountDownTimer(5000, 1000) {
                                         public void onTick(long millisUntilFinished) {
-                                            // Update the text with the seconds remaining
                                             timerText.setText((millisUntilFinished / 1000) + "s");
                                         }
 
                                         public void onFinish() {
-                                            // Time's up! Animate hide
                                             resultCard.animate()
                                                     .alpha(0f)
                                                     .scaleX(0.8f)
@@ -277,6 +278,12 @@ public class MainActivity extends AppCompatActivity {
                                                         resultCard.setVisibility(View.INVISIBLE);
                                                         currentCategoryOnScreen = null;
                                                     })
+                                                    .start();
+                                            
+                                            // Slide down the info panel
+                                            infoSlidingPanel.animate()
+                                                    .translationY(infoSlidingPanel.getHeight() + 400)
+                                                    .setDuration(500)
                                                     .start();
                                         }
                                     }.start();
@@ -297,7 +304,6 @@ public class MainActivity extends AppCompatActivity {
         if (cameraExecutor != null) {
             cameraExecutor.shutdown();
         }
-        // Clean up the timer to prevent memory leaks if the user closes the app
         if (popUpTimer != null) popUpTimer.cancel();
     }
 }

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,38 +10,64 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Gradient Overlay for better UI visibility over camera -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:background="@drawable/home_background_gradient"
-        android:alpha="0.3"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- Navigation Buttons -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnBack"
-        style="@style/Widget.Material3.Button.IconButton"
+        style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:layout_margin="16dp"
+        android:layout_marginTop="50dp"
+        app:backgroundTint="#5D89A1"
         app:icon="@drawable/ic_back"
         app:iconSize="32dp"
         app:iconTint="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnInfo"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_margin="16dp"
-        app:icon="@drawable/ic_info"
-        app:iconSize="32dp"
-        app:iconTint="#FFFFFF"
+    <!-- Instruction Popup -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/instructionPopup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="32dp"
+        app:cardBackgroundColor="#CC2C2C2C"
+        app:cardCornerRadius="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        app:strokeColor="#5D89A1"
+        app:strokeWidth="1dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@+id/btnCloseInstruction"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.1"
+                android:text="POINT CAMERA AT FOOD ITEMS"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:id="@+id/btnCloseInstruction"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                app:tint="@android:color/white" />
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Detection Result Card -->
     <com.google.android.material.card.MaterialCardView
@@ -53,12 +78,12 @@
         app:cardBackgroundColor="#CC2C2C2C"
         app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
-        app:strokeColor="#5D89A1"
-        app:strokeWidth="2dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/infoSlidingPanel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:strokeColor="#5D89A1"
+        app:strokeWidth="2dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -72,13 +97,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-black"
-                android:text="ITEM"
-                android:textColor="@android:color/white"
-                android:textSize="40sp"
                 android:shadowColor="#80000000"
                 android:shadowDx="0"
                 android:shadowDy="2"
-                android:shadowRadius="4" />
+                android:shadowRadius="4"
+                android:text="ITEM"
+                android:textColor="@android:color/white"
+                android:textSize="40sp" />
 
             <TextView
                 android:id="@+id/timerText"
@@ -86,28 +111,74 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:fontFamily="sans-serif-light"
+                android:letterSpacing="0.1"
                 android:text="5s"
                 android:textColor="#99C6DE"
-                android:textSize="18sp"
-                android:letterSpacing="0.1" />
+                android:textSize="18sp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Bottom Instructions -->
-    <TextView
-        android:id="@+id/climateText"
-        android:layout_width="wrap_content"
+    <!-- Bottom Sliding Info Panel -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/infoSlidingPanel"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:alpha="0.8"
-        android:fontFamily="sans-serif-light"
-        android:letterSpacing="0.1"
-        android:text="POINT CAMERA AT FOOD ITEMS"
-        android:textColor="@android:color/white"
-        android:textSize="12sp"
-        android:textAlignment="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:translationY="400dp"
+        app:cardBackgroundColor="#99C6DE"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="32dp">
+
+                <TextView
+                    android:id="@+id/infoPanelTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
+                    android:letterSpacing="0.1"
+                    android:text="CLIMATE IMPACT"
+                    android:textColor="#2C2C2C"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/infoPanelDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:lineSpacingExtra="4dp"
+                    android:text="Placeholder: This item is highly susceptible to rising temperatures and water scarcity. Expected yield decreases by 2050 due to shifting agricultural zones."
+                    android:textColor="#444444"
+                    android:textSize="15sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnCloseInfoPanel"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="Close Info Panel"
+                android:focusable="true"
+                android:padding="4dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                app:tint="#2C2C2C" />
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

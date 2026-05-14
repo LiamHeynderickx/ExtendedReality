@@ -100,6 +100,24 @@
                 android:clickable="true"
                 android:focusable="true" />
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- Subtle instructional hint -->
+        <TextView
+            android:id="@+id/tapHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="80dp"
+            android:alpha="0"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.1"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:text="TAP THE EARTH TO START"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

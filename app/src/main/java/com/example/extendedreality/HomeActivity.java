@@ -51,6 +51,23 @@ public class HomeActivity extends AppCompatActivity {
         // 2. Synchronized Orbiting Icons
         addOrbitingIcons();
 
+        // 3. Subtle tap hint animation
+        View tapHint = findViewById(R.id.tapHint);
+        if (tapHint != null) {
+            tapHint.animate()
+                    .alpha(0.7f)
+                    .setDuration(1500)
+                    .setStartDelay(2000)
+                    .withEndAction(() -> {
+                        tapHint.animate()
+                                .alpha(0.3f)
+                                .setDuration(1500)
+                                .setStartDelay(3000)
+                                .start();
+                    })
+                    .start();
+        }
+
         // Navigation
         if (clickOverlay != null) {
             clickOverlay.setOnClickListener(v -> {
