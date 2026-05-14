@@ -8,10 +8,11 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnBackAbout"
         style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_margin="16dp"
         app:icon="@drawable/ic_back"
+        app:iconSize="32dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

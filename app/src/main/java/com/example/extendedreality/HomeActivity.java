@@ -22,11 +22,22 @@ public class HomeActivity extends AppCompatActivity {
     private ImageView rotatingEarth;
     private FrameLayout orbitContainer;
     private MaterialCardView earthCard;
-    private Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Make the layout draw behind the system bars for an immersive look
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                            android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                            android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            );
+        }
+
         setContentView(R.layout.activity_home);
 
         rotatingEarth = findViewById(R.id.rotatingEarth);
@@ -34,16 +45,10 @@ public class HomeActivity extends AppCompatActivity {
         earthCard = findViewById(R.id.btnStartCamera);
         View clickOverlay = findViewById(R.id.clickOverlay);
 
-        // 1. Rotation Animation (Existing)
-        if (rotatingEarth != null) {
-            Animation rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_slowly);
-            rotatingEarth.startAnimation(rotate);
-        }
-
-        // 2. Breathing Animation
+        // 1. Breathing Animation
         startBreathingAnimation();
 
-        // 3. Orbiting Icons (Updated with Emojis and Randomized Start)
+        // 2. Synchronized Orbiting Icons
         addOrbitingIcons();
 
         // Navigation
@@ -85,24 +90,30 @@ public class HomeActivity extends AppCompatActivity {
             R.drawable.ic_detailed_apple, 
             R.drawable.ic_detailed_fish, 
             R.drawable.ic_detailed_bread,
-            R.drawable.ic_detailed_coffee
+            R.drawable.ic_detailed_coffee,
+            R.drawable.ic_detailed_wine,
+            R.drawable.ic_detailed_honey,
+            R.drawable.ic_detailed_chocolate,
+            R.drawable.ic_detailed_water
         };
-        float[] distances = {160f, 200f, 240f, 280f}; // DP from center
-        long[] durations = {15000L, 20000L, 25000L, 30000L}; // Slower speeds
+        
+        float orbitRadius = 170f; // Reduced from 200f to keep items in frame
+        long orbitDuration = 30000L; // Slower uniform speed for more items
 
         float density = getResources().getDisplayMetrics().density;
 
         for (int i = 0; i < iconResIds.length; i++) {
             ImageView icon = new ImageView(this);
             icon.setImageResource(iconResIds[i]);
-            int size = (int) (40 * density); // Slightly larger icons
+            int size = (int) (40 * density);
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(size, size);
             lp.gravity = Gravity.CENTER;
             icon.setLayoutParams(lp);
             orbitContainer.addView(icon);
 
-            float startAngle = random.nextFloat() * 360f; // Random starting position
-            startOrbitAnimation(icon, distances[i] * density, durations[i], startAngle);
+            // Spaced apart equally (360 / 8 = 45 degrees)
+            float startAngle = i * 45f;
+            startOrbitAnimation(icon, orbitRadius * density, orbitDuration, startAngle);
         }
     }
 

@@ -9,10 +9,12 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnInfoTop"
         style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_margin="16dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="46dp"
         app:icon="@drawable/ic_info"
+        app:iconSize="32dp"
         app:iconTint="#5D89A1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -21,6 +23,7 @@
         android:id="@+id/titleContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="32dp"
@@ -33,14 +36,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-black"
-            android:text="FutureFoods"
-            android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:textSize="48sp"
             android:shadowColor="#80000000"
             android:shadowDx="0"
             android:shadowDy="4"
-            android:shadowRadius="8" />
+            android:shadowRadius="8"
+            android:text="FutureFoods"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="48sp" />
 
         <TextView
             android:id="@+id/subtitleText"
@@ -50,14 +53,14 @@
             android:alpha="0.85"
             android:fontFamily="sans-serif-light"
             android:letterSpacing="0.2"
-            android:text="SEE THE EFFECTS OF CLIMATE CHANGE ON OUR FOODS"
-            android:textAlignment="center"
-            android:textColor="#E0F2F1"
-            android:textSize="12sp"
             android:shadowColor="#80000000"
             android:shadowDx="0"
             android:shadowDy="2"
-            android:shadowRadius="4" />
+            android:shadowRadius="4"
+            android:text="SEE THE EFFECTS OF CLIMATE CHANGE ON OUR FOODS"
+            android:textAlignment="center"
+            android:textColor="#E0F2F1"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <!-- Container for Orbiting Icons -->
@@ -87,7 +90,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="Rotating Earth"
                 android:scaleType="centerCrop"
-                android:src="@drawable/background2" />
+                android:src="@drawable/img" />
 
             <View
                 android:id="@+id/clickOverlay"
